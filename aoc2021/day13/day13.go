@@ -13,7 +13,7 @@ type FoldInstruction struct {
 }
 
 type Input struct {
-	Coordinates  []Coordinate // map[string]Coordinate
+	Coordinates  []Coordinate
 	Instructions []FoldInstruction
 }
 type Grid [][]int
@@ -27,7 +27,6 @@ func parseInput() Input {
 	parts := strings.Split(string(data), "\n\n")
 	var input Input
 
-	//coords := make(map[string]Coordinate)
 	var coords []Coordinate
 	for _, line := range strings.Split(parts[0], "\n") {
 		parts := strings.Split(line, ",")
@@ -104,11 +103,9 @@ func printGrid(coordinates []Coordinate) {
 	}
 
 	for i := 0; i <= maxY; i++ {
-		//var xForThisRow []int
 		xForThisRow := make(map[int]bool)
 		for _, coord := range coordinates {
 			if coord[1] == i {
-				//xForThisRow = append(xForThisRow, coord[0])
 				xForThisRow[coord[0]] = true
 			}
 		}
