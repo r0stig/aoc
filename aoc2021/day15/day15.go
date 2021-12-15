@@ -111,7 +111,7 @@ func calcHeuristic(grid [][]int, pos []int) int {
 	return dX + dY
 }
 
-func traverse(grid [][]int) {
+func traverse(grid [][]int) int {
 	came_from := make(map[Point]string)
 
 	distancesWithHeuristics := make(map[Point]int)
@@ -136,8 +136,7 @@ func traverse(grid [][]int) {
 		cur := heap.Pop(&pq).(*Item)
 		head := cur.point
 		if head.col == len(grid)-1 && head.row == len(grid)-1 {
-			fmt.Printf("Goal reached!! \n")
-			break
+			return distances[Point{row: len(grid) - 1, col: len(grid) - 1}]
 		}
 
 		neighboars := getNeighboars(grid, head.row, head.col)
@@ -157,12 +156,13 @@ func traverse(grid [][]int) {
 		}
 	}
 
-	fmt.Printf("Distances %v\n", distances[Point{row: len(grid) - 1, col: len(grid) - 1}])
+	return -1
 }
 
 func part1() {
 	input := parseInput()
-	traverse(input)
+	sum := traverse(input)
+	fmt.Printf("Solution part 1: %d\n", sum)
 }
 
 func part2() {
@@ -186,12 +186,11 @@ func part2() {
 		}
 	}
 
-	traverse(newGrid)
+	sum := traverse(newGrid)
+	fmt.Printf("Solution part 2: %d\n", sum)
 }
 
 func main() {
-	fmt.Println("Solution part 1:")
 	part1()
-	fmt.Println("Solution part 2:")
 	part2()
 }
