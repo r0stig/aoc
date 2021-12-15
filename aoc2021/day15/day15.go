@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+type Point struct {
+	row int
+	col int
+}
+
 func parseInput() [][]int {
 	data, err := ioutil.ReadFile("./input1.txt")
 	if err != nil {
@@ -61,39 +66,39 @@ func calcHeuristic(grid [][]int, pos []int) int {
 	return dX + dY
 }
 
-func findMinStack(grid [][]int, stack [][]int, distances map[string]int) int {
+func findMinStack(stack [][]int, distances map[Point]int) int {
 	minDistance := 999999999999999999
 	var minDistancePosIndex int
 
 	for i, s := range stack {
-		distance := distances[fmt.Sprintf("%d,%d", s[1], s[0])]
+		distance := distances[Point{row: s[0], col: s[1]}]
 		if distance < minDistance {
 			minDistance = distance
 			minDistancePosIndex = i
 		}
 	}
-	// fmt.Printf("Traverse %v %v %v\n", stack[minDistancePosIndex], distances[fmt.Sprintf("%d,%d", stack[minDistancePosIndex][1], stack[minDistancePosIndex][0])], minDistance)
+
 	return minDistancePosIndex
 }
 
 func traverse(grid [][]int) {
 	var stack [][]int
 	stack = append(stack, []int{0, 0})
-	came_from := make(map[string]string)
+	came_from := make(map[Point]string)
 
-	distancesWithHeuristics := make(map[string]int)
-	distances := make(map[string]int)
+	distancesWithHeuristics := make(map[Point]int)
+	distances := make(map[Point]int)
 	for row := 0; row < len(grid); row++ {
 		for col := 0; col < len(grid[row]); col++ {
-			distances[fmt.Sprintf("%d,%d", col, row)] = 999999999999999999
-			distancesWithHeuristics[fmt.Sprintf("%d,%d", col, row)] = 999999999999999999
+			distances[Point{row, col}] = 999999999999999999
+			distancesWithHeuristics[Point{row, col}] = 999999999999999999
 		}
 	}
-	distances["0,0"] = 0
-	distancesWithHeuristics["0,0"] = 0
+	distances[Point{row: 0, col: 0}] = 0
+	distancesWithHeuristics[Point{row: 0, col: 0}] = 0
 
 	for len(stack) > 0 {
-		headIndex := findMinStack(grid, stack, distancesWithHeuristics)
+		headIndex := findMinStack(stack, distancesWithHeuristics)
 		head := stack[headIndex]
 		stack = append(stack[:headIndex], stack[headIndex+1:]...)
 
@@ -104,12 +109,12 @@ func traverse(grid [][]int) {
 
 		neighboars := getNeighboars(grid, head[0], head[1])
 		for _, neighboar := range neighboars {
-			tempDistance := distances[fmt.Sprintf("%d,%d", head[1], head[0])] + grid[neighboar[0]][neighboar[1]]
+			tempDistance := distances[Point{row: head[0], col: head[1]}] + grid[neighboar[0]][neighboar[1]]
 
-			if tempDistance < distances[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] {
-				distances[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] = tempDistance
-				distancesWithHeuristics[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] = tempDistance + calcHeuristic(grid, neighboar)
-				came_from[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] = fmt.Sprintf("%d,%d", head[1], head[0])
+			if tempDistance < distances[Point{row: neighboar[0], col: neighboar[1]}] {
+				distances[Point{row: neighboar[0], col: neighboar[1]}] = tempDistance
+				distancesWithHeuristics[Point{row: neighboar[0], col: neighboar[1]}] = tempDistance + calcHeuristic(grid, neighboar)
+				came_from[Point{row: neighboar[0], col: neighboar[1]}] = fmt.Sprintf("%d,%d", head[1], head[0])
 
 				alreadyInStack := false
 				for _, s := range stack {
@@ -125,7 +130,7 @@ func traverse(grid [][]int) {
 		}
 	}
 
-	fmt.Printf("Distances %v\n", distances[fmt.Sprintf("%d,%d", len(grid)-1, len(grid)-1)])
+	fmt.Printf("Distances %v\n", distances[Point{row: len(grid) - 1, col: len(grid) - 1}])
 }
 
 func part1() {
