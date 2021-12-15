@@ -78,21 +78,25 @@ func parseInput() [][]int {
 	return grid
 }
 
-func getNeighboars(grid [][]int, row, col int) [][]int {
-	var neighboars [][]int
+func getNeighboars(grid [][]int, row, col int) [4][2]int {
+	var neighboars [4][2]int
 
 	if row > 0 {
-		neighboars = append(neighboars, []int{row - 1, col})
+		neighboars[0][0] = row - 1
+		neighboars[0][1] = col
 	}
 
 	if col > 0 {
-		neighboars = append(neighboars, []int{row, col - 1})
+		neighboars[1][0] = row
+		neighboars[1][1] = col - 1
 	}
 	if col < len(grid[row])-1 {
-		neighboars = append(neighboars, []int{row, col + 1})
+		neighboars[2][0] = row
+		neighboars[2][1] = col + 1
 	}
 	if row < len(grid)-1 {
-		neighboars = append(neighboars, []int{row + 1, col})
+		neighboars[3][0] = row + 1
+		neighboars[3][1] = col
 	}
 
 	return neighboars
