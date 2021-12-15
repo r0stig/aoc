@@ -1,12 +1,53 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"strconv"
 	"strings"
 )
+
+// PriorityQueue from docs
+// https://golang.google.cn/pkg/container/heap/#example__priorityQueue
+type Item struct {
+	point    Point
+	priority int
+	index    int
+}
+
+// A PriorityQueue implements heap.Interface and holds Items.
+type PriorityQueue []*Item
+
+func (pq PriorityQueue) Len() int { return len(pq) }
+
+func (pq PriorityQueue) Less(i, j int) bool {
+	return pq[i].priority < pq[j].priority
+}
+
+func (pq PriorityQueue) Swap(i, j int) {
+	pq[i], pq[j] = pq[j], pq[i]
+	pq[i].index = i
+	pq[j].index = j
+}
+
+func (pq *PriorityQueue) Push(x interface{}) {
+	n := len(*pq)
+	item := x.(*Item)
+	item.index = n
+	*pq = append(*pq, item)
+}
+
+func (pq *PriorityQueue) Pop() interface{} {
+	old := *pq
+	n := len(old)
+	item := old[n-1]
+	old[n-1] = nil  // avoid memory leak
+	item.index = -1 // for safety
+	*pq = old[0 : n-1]
+	return item
+}
 
 type Point struct {
 	row int
@@ -66,24 +107,7 @@ func calcHeuristic(grid [][]int, pos []int) int {
 	return dX + dY
 }
 
-func findMinStack(stack [][]int, distances map[Point]int) int {
-	minDistance := 999999999999999999
-	var minDistancePosIndex int
-
-	for i, s := range stack {
-		distance := distances[Point{row: s[0], col: s[1]}]
-		if distance < minDistance {
-			minDistance = distance
-			minDistancePosIndex = i
-		}
-	}
-
-	return minDistancePosIndex
-}
-
 func traverse(grid [][]int) {
-	var stack [][]int
-	stack = append(stack, []int{0, 0})
 	came_from := make(map[Point]string)
 
 	distancesWithHeuristics := make(map[Point]int)
@@ -97,35 +121,34 @@ func traverse(grid [][]int) {
 	distances[Point{row: 0, col: 0}] = 0
 	distancesWithHeuristics[Point{row: 0, col: 0}] = 0
 
-	for len(stack) > 0 {
-		headIndex := findMinStack(stack, distancesWithHeuristics)
-		head := stack[headIndex]
-		stack = append(stack[:headIndex], stack[headIndex+1:]...)
+	pq := make(PriorityQueue, 0)
+	heap.Init(&pq)
+	heap.Push(&pq, &Item{
+		point:    Point{row: 0, col: 0},
+		priority: grid[0][0],
+	})
 
-		if head[0] == len(grid)-1 && head[1] == len(grid)-1 {
+	for pq.Len() > 0 {
+		cur := heap.Pop(&pq).(*Item)
+		head := cur.point
+		if head.col == len(grid)-1 && head.row == len(grid)-1 {
 			fmt.Printf("Goal reached!! \n")
 			break
 		}
 
-		neighboars := getNeighboars(grid, head[0], head[1])
+		neighboars := getNeighboars(grid, head.row, head.col)
 		for _, neighboar := range neighboars {
-			tempDistance := distances[Point{row: head[0], col: head[1]}] + grid[neighboar[0]][neighboar[1]]
+			tempDistance := distances[Point{row: head.row, col: head.col}] + grid[neighboar[0]][neighboar[1]]
 
 			if tempDistance < distances[Point{row: neighboar[0], col: neighboar[1]}] {
 				distances[Point{row: neighboar[0], col: neighboar[1]}] = tempDistance
-				distancesWithHeuristics[Point{row: neighboar[0], col: neighboar[1]}] = tempDistance + calcHeuristic(grid, neighboar)
-				came_from[Point{row: neighboar[0], col: neighboar[1]}] = fmt.Sprintf("%d,%d", head[1], head[0])
+				distancesWithHeuristics[Point{row: neighboar[0], col: neighboar[1]}] = tempDistance // + calcHeuristic(grid, neighboar) // Quicker without this, why?
+				came_from[Point{row: neighboar[0], col: neighboar[1]}] = fmt.Sprintf("%d,%d", head.col, head.row)
 
-				alreadyInStack := false
-				for _, s := range stack {
-					if neighboar[0] == s[0] && neighboar[1] == s[1] {
-						alreadyInStack = true
-						break
-					}
-				}
-				if !alreadyInStack {
-					stack = append(stack, neighboar)
-				}
+				heap.Push(&pq, &Item{
+					point:    Point{row: neighboar[0], col: neighboar[1]},
+					priority: tempDistance,
+				})
 			}
 		}
 	}
