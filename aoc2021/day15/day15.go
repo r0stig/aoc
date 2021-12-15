@@ -61,87 +61,55 @@ func calcHeuristic(grid [][]int, pos []int) int {
 	return dX + dY
 }
 
-func findMin(distances map[string]int, visiteds [][]int) []int {
-	minDistance := 999999999999999999
-	var minDistancePos []int
-
-	for d, distance := range distances {
-		found := false
-		for _, visited := range visiteds {
-			if d == fmt.Sprintf("%d,%d", visited[1], visited[0]) {
-				found = true
-			}
-		}
-		if !found && distance < minDistance {
-			minDistance = distance
-			parts := strings.Split(d, ",")
-			y, _ := strconv.Atoi(parts[0])
-			x, _ := strconv.Atoi(parts[1])
-			minDistancePos = []int{y, x}
-		}
-	}
-	return minDistancePos
-}
-
 func findMinStack(grid [][]int, stack [][]int, distances map[string]int) int {
 	minDistance := 999999999999999999
 	var minDistancePosIndex int
 
 	for i, s := range stack {
 		distance := distances[fmt.Sprintf("%d,%d", s[1], s[0])]
-		heuristic := calcHeuristic(grid, s)
-		if distance+heuristic < minDistance {
-			minDistance = distance + heuristic
+		if distance < minDistance {
+			minDistance = distance
 			minDistancePosIndex = i
 		}
 	}
-
+	// fmt.Printf("Traverse %v %v %v\n", stack[minDistancePosIndex], distances[fmt.Sprintf("%d,%d", stack[minDistancePosIndex][1], stack[minDistancePosIndex][0])], minDistance)
 	return minDistancePosIndex
 }
 
 func traverse(grid [][]int) {
-	var visited [][]int
-
 	var stack [][]int
 	stack = append(stack, []int{0, 0})
 	came_from := make(map[string]string)
 
+	distancesWithHeuristics := make(map[string]int)
 	distances := make(map[string]int)
 	for row := 0; row < len(grid); row++ {
 		for col := 0; col < len(grid[row]); col++ {
 			distances[fmt.Sprintf("%d,%d", col, row)] = 999999999999999999
+			distancesWithHeuristics[fmt.Sprintf("%d,%d", col, row)] = 999999999999999999
 		}
 	}
 	distances["0,0"] = 0
+	distancesWithHeuristics["0,0"] = 0
 
 	for len(stack) > 0 {
-		headIndex := findMinStack(grid, stack, distances)
+		headIndex := findMinStack(grid, stack, distancesWithHeuristics)
 		head := stack[headIndex]
 		stack = append(stack[:headIndex], stack[headIndex+1:]...)
 
 		if head[0] == len(grid)-1 && head[1] == len(grid)-1 {
 			fmt.Printf("Goal reached!! \n")
 			break
-		} else {
-			visited = append(visited, head)
 		}
 
 		neighboars := getNeighboars(grid, head[0], head[1])
 		for _, neighboar := range neighboars {
-			found := false
-			for _, visited := range visited {
-				if neighboar[0] == visited[0] && neighboar[1] == visited[1] {
-					found = true
-					break
-				}
-			}
-			if !found {
-				tempDistance := distances[fmt.Sprintf("%d,%d", head[1], head[0])] + grid[neighboar[0]][neighboar[1]]
+			tempDistance := distances[fmt.Sprintf("%d,%d", head[1], head[0])] + grid[neighboar[0]][neighboar[1]]
 
-				if tempDistance < distances[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] {
-					distances[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] = tempDistance
-					came_from[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] = fmt.Sprintf("%d,%d", head[1], head[0])
-				}
+			if tempDistance < distances[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] {
+				distances[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] = tempDistance
+				distancesWithHeuristics[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] = tempDistance + calcHeuristic(grid, neighboar)
+				came_from[fmt.Sprintf("%d,%d", neighboar[1], neighboar[0])] = fmt.Sprintf("%d,%d", head[1], head[0])
 
 				alreadyInStack := false
 				for _, s := range stack {
