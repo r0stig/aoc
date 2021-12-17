@@ -100,7 +100,7 @@ func part2() {
 	targetXYCounts := 0
 
 	for i := 0; i < len(yVals); i++ {
-		for testVelX := 0; testVelX < 10000; testVelX++ {
+		for testVelX := 0; testVelX <= target.toX; testVelX++ {
 			newX, newY := 0, 0
 			velX, velY := testVelX, yVals[i]
 			maxY := 0
