@@ -79,10 +79,10 @@ func part2() {
 	}
 	var yVals []int
 
-	for i := -10000; i < 10000; i++ {
+	for testVelY := target.fromY; testVelY < 10000; testVelY++ {
 		beenInTarget := false
 		newX, newY := 0, 0
-		velX, velY := 0, i
+		velX, velY := 0, testVelY
 		stepNr := 1
 		for newY >= target.toY {
 			newX, newY = step(newX, newY, velX, velY, stepNr)
@@ -93,18 +93,19 @@ func part2() {
 			stepNr++
 		}
 		if beenInTarget {
-			yVals = append(yVals, i)
+			yVals = append(yVals, testVelY)
 		}
 	}
 
 	targetXYCounts := 0
 
 	for i := 0; i < len(yVals); i++ {
-		for j := 0; j < 10000; j++ {
+		for testVelX := 0; testVelX < 10000; testVelX++ {
 			newX, newY := 0, 0
-			velX, velY := j, yVals[i]
+			velX, velY := testVelX, yVals[i]
 			maxY := 0
-			for stepNr := 1; stepNr < 10000; stepNr++ {
+			stepNr := 1
+			for newY >= target.toY {
 				newX, newY = step(newX, newY, velX, velY, stepNr)
 				if newY > maxY {
 					maxY = newY
@@ -113,6 +114,7 @@ func part2() {
 					targetXYCounts++
 					break
 				}
+				stepNr++
 			}
 		}
 	}
