@@ -124,6 +124,3 @@ func main() {
 	part1()
 	part2()
 }
-
-// 8,47 thats not right
-// 8,214 That's not the right answer.
